@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 
 class queuSim():
     def __init__(self, randomSeed = 42, newCustomers = 500, intervalCustomers = 2, serviceTime = 2, numSim = 100, 
-    capacity = 1, arrivalDistribution = "M", serviceDistribution = "M", helpStrat = "FIFO", verbose=False):
+    arrivalDistribution = "M", serviceDistribution = "M", capacity = 1, helpStrat = "FIFO", verbose=False):
         """creates a class that runs a simulation of a queue.
 
         Args:
@@ -45,7 +45,10 @@ class queuSim():
             list: Returns a list of all waiting times of customers.
         """
         results = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
-        return results
+        out = []
+        for sublist in results:
+            out.extend(sublist)
+        return out
 
 
     def process(self,i):
