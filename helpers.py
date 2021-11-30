@@ -59,17 +59,29 @@ class queuSim():
             print('%7.4f %s: Here I am' % (arrive, name))
 
         tib = random.expovariate(1.0 / serviceTime) # markovian service rate
-
-        with servers.request() as req:
+        if self.helpStrat == "SJF":
+            with servers.request(priority = int(1/tib*1000)) as req:
             # Wait for the counter 
-            yield req
-    
-            wait = env.now - arrive
-            waitTimes.append(wait)
-            # We got to the counter
-            if verbose:
-                print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
-    
-            yield env.timeout(tib)
-            if verbose:
-                print('%7.4f %s: Finished' % (env.now, name))
+                yield req
+                wait = env.now - arrive
+                waitTimes.append(wait)
+                # We got to the counter
+                if verbose:
+                    print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
+                yield env.timeout(tib)
+                if verbose:
+                    print('%7.4f %s: Finished' % (env.now, name))
+        else:
+            with servers.request() as req:
+                # Wait for the counter 
+                yield req
+
+                wait = env.now - arrive
+                waitTimes.append(wait)
+                # We got to the counter
+                if verbose:
+                    print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
+
+                yield env.timeout(tib)
+                if verbose:
+                    print('%7.4f %s: Finished' % (env.now, name))
