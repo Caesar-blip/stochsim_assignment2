@@ -10,11 +10,13 @@ class queuSim():
     def __init__(self, randomSeed = 42, newCustomers = 500, intervalCustomers = 2, serviceTime = 2, numSim = 100, 
     capacity = 1, arrivalDistribution = "M", serviceDistribution = "M", helpStrat = "FIFO", verbose=False):
         assert helpStrat == "SJF" or helpStrat == "FIFO", "This helpstrat has not yet been implemented"
-        
+        assert serviceDistribution == "M" or serviceDistribution == "D" or serviceDistribution  == "H", "This service distribution has not yet been implemented"
+
         self.newCustomers = newCustomers
         self.serviceTime = serviceTime
         self.numSim = numSim
         self.capacity = capacity
+        # we scale the arrival rate with the number of servers, so system load is stable
         self.intervalCustomers = intervalCustomers / capacity
         self.seed = random.seed(randomSeed)
 
@@ -36,7 +38,7 @@ class queuSim():
             servers = simpy.PriorityResource(env, self.capacity)
         else:
             servers = simpy.Resource(env, self.capacity)
-        # we scale the arrival rate with the number of servers, so system load is stable
+        
         env.process(self.source(env, servers, waitTimes, self.verbose))
         env.run()
 
@@ -58,7 +60,17 @@ class queuSim():
         if verbose:
             print('%7.4f %s: Here I am' % (arrive, name))
 
-        tib = random.expovariate(1.0 / serviceTime) # markovian service rate
+        if self.serviceDistribution == "D":
+            tib = self.serviceTime
+        elif self.serviceDistribution == "H":
+            if np.random.random() < 0.25:
+                tib = random.expovariate(1/5)
+            else:
+                tib = random.expovariate(1/1)
+        else:
+            # markovian service rate
+            tib = random.expovariate(1.0 / serviceTime) 
+
         if self.helpStrat == "SJF":
             with servers.request(priority = int(1/tib*1000)) as req:
             # Wait for the counter 
