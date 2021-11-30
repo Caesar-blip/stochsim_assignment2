@@ -44,8 +44,8 @@ class queuSim():
         Returns:
             list: Returns a list of all waiting times of customers.
         """
-        waitTimes = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
-        return waitTimes[0]
+        results = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
+        return results
 
 
     def process(self,i):
