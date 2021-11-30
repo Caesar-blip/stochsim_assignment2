@@ -8,8 +8,8 @@ from joblib import Parallel, delayed
 
 class queuSim():
     def __init__(self, randomSeed = 42, newCustomers = 500, intervalCustomers = 2, serviceTime = 2, numSim = 100, 
-    capacity = 1, arrivalDistribution = "M", serviceDistribution = "M", helpStrat = "FIFO"):
-        
+    capacity = 1, arrivalDistribution = "M", serviceDistribution = "M", helpStrat = "FIFO", verbose=False):
+        assert helpStrat == "SJF" or helpStrat == "FIFO", "This helpstrat has not yet been implemented"
         
         self.newCustomers = newCustomers
         self.serviceTime = serviceTime
@@ -21,16 +21,24 @@ class queuSim():
         self.arrivalDistribution = arrivalDistribution
         self.serviceDistribution = serviceDistribution
         self.helpStrat = helpStrat
+        self.verbose = verbose
 
 
-    def runSim(self, verbose=False):
+    def runSim(self):
+        waitTimes = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
+        return waitTimes
+
+
+    def process(self,i):
         waitTimes = []
-        for i in range(self.numSim):
-            env = simpy.Environment()
+        env = simpy.Environment()
+        if self.helpStrat == "SJF":
+            servers = simpy.PriorityResource(env, self.capacity)
+        else:
             servers = simpy.Resource(env, self.capacity)
-            # we scale the arrival rate with the number of servers, so system load is stable
-            env.process(self.source(env, servers, waitTimes, verbose))
-            env.run()
+        # we scale the arrival rate with the number of servers, so system load is stable
+        env.process(self.source(env, servers, waitTimes, self.verbose))
+        env.run()
 
         return waitTimes
 
@@ -49,7 +57,9 @@ class queuSim():
         arrive = env.now
         if verbose:
             print('%7.4f %s: Here I am' % (arrive, name))
-    
+
+        tib = random.expovariate(1.0 / serviceTime) # markovian service rate
+
         with servers.request() as req:
             # Wait for the counter 
             yield req
@@ -60,21 +70,6 @@ class queuSim():
             if verbose:
                 print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
     
-            tib = random.expovariate(1.0 / serviceTime) # markovian service rate
             yield env.timeout(tib)
             if verbose:
                 print('%7.4f %s: Finished' % (env.now, name))
-
-
-def plotResults(waitTimes1, waitTimes2, waitTimes4):
-    fig, (ax1, ax2, ax3) = plt.subplots(1,3, sharey=True)
-    fig.set_size_inches(10.5, 10.5)
-    fig.suptitle(f"waiting time per customer")
-    fig.supxlabel("Customer number")
-    fig.supylabel("Waiting time")
-    ax1.plot(np.sort(waitTimes1))
-    ax1.set_title("1 server")
-    ax2.plot(np.sort(waitTimes2))
-    ax2.set_title("2 servers")
-    ax3.plot(np.sort(waitTimes4))
-    ax3.set_title("4 servers")
