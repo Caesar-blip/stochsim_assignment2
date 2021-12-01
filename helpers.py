@@ -42,13 +42,15 @@ class queuSim():
         """main loop of the simulation, change the number of workers to fit your system.
 
         Returns:
-            list: Returns a list of all waiting times of customers.
+            list: Returns a list containing all lists with waiting times for customers per simulation
         """
+        
         results = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
-        out = []
-        for sublist in results:
-            out.extend(sublist)
-        return out
+        # out = []
+        # for sublist in results:
+        #     out.extend(sublist)
+        # return out
+        return results
 
 
     def process(self,i):
@@ -121,7 +123,8 @@ class queuSim():
             tib = random.expovariate(1.0 / self.serviceTime) 
 
         if self.helpStrat == "SJF":
-            with servers.request(priority = int(1/tib*1000)) as req:
+            # with servers.request(priority = int(1/tib*1000)) as req:
+            with servers.request(priority = tib) as req:
             # Wait for the counter 
                 yield req
                 wait = env.now - arrive
