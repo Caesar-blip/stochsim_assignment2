@@ -23,6 +23,7 @@ class queuSim():
         """
         assert helpStrat == "SJF" or helpStrat == "FIFO", "This helpstrat has not yet been implemented"
         assert serviceDistribution == "M" or serviceDistribution == "D" or serviceDistribution  == "H", "This service distribution has not yet been implemented"
+        assert arrivalDistribution == "M", "This arrival distribution has not yet been implemented"
 
         self.newCustomers = newCustomers
         self.serviceTime = serviceTime
@@ -39,22 +40,18 @@ class queuSim():
 
 
     def runSim(self):
-        """main loop of the simulation, change the number of workers to fit your system.
+        """Caller function for parallelization.
 
         Returns:
             list: Returns a list containing all lists with waiting times for customers per simulation
         """
         
         results = Parallel(n_jobs=8)(delayed(self.process)(i) for i in range(self.numSim))
-        # out = []
-        # for sublist in results:
-        #     out.extend(sublist)
-        # return out
         return results
 
 
     def process(self,i):
-        """Caller function that calls initiates the simulation.
+        """Main loop of the simulation.
 
         Args:
             i (int): This is only used for parallelization, should not be used for
