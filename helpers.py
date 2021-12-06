@@ -54,7 +54,7 @@ class queuSim():
         """Main loop of the simulation.
 
         Args:
-            i (int): This is only used for parallelization, should not be used for
+            i (int): This is only used for parallelization, should not be used
 
         Returns:
             list: Returns a list of waiting times of customers.
